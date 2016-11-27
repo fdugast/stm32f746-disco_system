@@ -54,18 +54,19 @@ $(rootfs_img_gz_bin):
 	@echo Building $(rootfs_img_gz)
 	gzip -c $(rootfs_dir)/$(rootfs_img) > $(rootfs_img_gz)
 	@echo Building $(rootfs_img_gz_bin)
-#	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip $(rootfs_img_gz_bin)
 	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip -a 0xc0208000 -e 0xc0208001 $(rootfs_img_gz_bin)
-#	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip -a 0xc0508000 -e 0xc0508001 $(rootfs_img_gz_bin)
 	
 $(linux_bin): build_linux
 	
 
 build_linux: check_compiler_exists prepare_linux_sources
 	@echo Building Linux
-	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) Image
+#	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) Image
+	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) zImage
 	mkdir -p $(build_dir)
-	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0008000 -e 0xc0008001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/Image $(linux_bin)
+#	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0008000 -e 0xc0008001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/Image $(linux_bin)
+	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0508000 -e 0xc0508001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/zImage $(linux_bin)
+#	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0308000 -e 0xc0308001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/zImage $(linux_bin)
 #	$(mkimage) -A arm -O linux -T kernel -C none -a 0xC0108000 -e 0xC0108000 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/Image $(linux_bin)
 	cp $(linux_bin) $(tftp_dir)/
 
