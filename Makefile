@@ -11,10 +11,12 @@ config_dir = config
 mkimage = $(src_dir)/$(u-boot_src_dir)/tools/mkimage
 rootfs_dir = rootfs
 rootfs_files_dir = $(rootfs_dir)/files
+//rootfs_files_dir = $(rootfs_dir)/files_mini
 rootfs_img = rootfs.img
 rootfs_img_gz = $(rootfs_dir)/rootfs.img.gz
 rootfs_img_gz_bin = $(build_dir)/rootfs.img.gz.uImage
-system_bin = $(build_dir)/system.uImage
+system_uImage = $(build_dir)/system.uImage
+system_bin = $(build_dir)/system.bin
 tftp_dir = /srv/tftp/stm32f7
 ARCH=arm
 CROSS_COMPILE=arm-uclinuxeabi-
@@ -22,14 +24,24 @@ PARALLEL=-j9
 
 all: system_bin copy_to_tftp
 
-copy_to_tftp: $(system_bin)
-	cp $(system_bin) $(tftp_dir)/
+#copy_to_tftp: $(system_bin)
+#	cp $(system_bin) $(tftp_dir)/
+
+system_bin: $(linux_bin)
+	dd if=/dev/zero of=$(system_bin) bs=1024k count=1
+	dd if=build/u-boot.bin of=$(system_bin) conv=notrunc bs=1
+	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=96k
+	dd if=build/kernel.uImage of=$(system_bin) conv=notrunc bs=1 seek=252k
+#	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=888576
+#	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=128k
+#	dd if=$(rootfs_img_gz_bin)-5 of=$(system_bin) conv=notrunc bs=1 seek=512k
 	
-system_bin: $(linux_bin) $(rootfs_img_gz_bin)
-	@echo Building $(system_bin)
-	dd if=/dev/zero of=$(system_bin) bs=6M count=1
-	dd if=$(linux_bin) of=$(system_bin) conv=notrunc bs=1
-	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=2M
+system_uImage: $(linux_bin) $(rootfs_img_gz_bin)
+	@echo Building $(system_uImage)
+	dd if=/dev/zero of=$(system_uImage) bs=6M count=1
+	dd if=$(linux_bin) of=$(system_uImage) conv=notrunc bs=1
+	dd if=$(rootfs_img_gz_bin) of=$(system_uImage) conv=notrunc bs=1 seek=2M
+	cp $(system_uImage) $(tftp_dir)/
 
 $(rootfs_img_gz_bin):
 	@if [ ! -d $(rootfs_files_dir) ]; then \
@@ -42,7 +54,9 @@ $(rootfs_img_gz_bin):
 	@echo Building $(rootfs_img_gz)
 	gzip -c $(rootfs_dir)/$(rootfs_img) > $(rootfs_img_gz)
 	@echo Building $(rootfs_img_gz_bin)
-	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip $(rootfs_img_gz_bin)
+#	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip $(rootfs_img_gz_bin)
+	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip -a 0xc0208000 -e 0xc0208001 $(rootfs_img_gz_bin)
+#	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip -a 0xc0508000 -e 0xc0508001 $(rootfs_img_gz_bin)
 	
 $(linux_bin): build_linux
 	
@@ -50,7 +64,16 @@ $(linux_bin): build_linux
 build_linux: check_compiler_exists prepare_linux_sources
 	@echo Building Linux
 	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) Image
+	mkdir -p $(build_dir)
 	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0008000 -e 0xc0008001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/Image $(linux_bin)
+#	$(mkimage) -A arm -O linux -T kernel -C none -a 0xC0108000 -e 0xC0108000 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/Image $(linux_bin)
+	cp $(linux_bin) $(tftp_dir)/
+
+build_linux_gz: check_compiler_exists prepare_linux_sources
+	@echo Building Linux
+	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) zImage
+	mkdir -p $(build_dir)
+	$(mkimage) -A arm -O linux -T kernel -C gzip -a 0xc0008000 -e 0xc0008001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/zImage $(linux_bin)
 
 menuconfig_linux:
 	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) menuconfig
@@ -78,11 +101,18 @@ prepare_u-boot_sources: check_git_exists
 		git clone $(u-boot_repository) $(src_dir)/$(u-boot_src_dir); \
 	fi
 
-flash_u-boot: $(u-boot_bin)
+flash_u-boot: #$(u-boot_bin)
 	cd $(openocd_dir)/openocd-stm32f7/tcl && \
 		../src/openocd \
 		-f board/stm32f7discovery.cfg \
 		-c "program $(shell pwd)/$(u-boot_bin) 0x08000000" \
+		-c "reset run" -c shutdown
+
+flash_system: #$(u-boot_bin)
+	cd $(openocd_dir)/openocd-stm32f7/tcl && \
+		../src/openocd \
+		-f board/stm32f7discovery.cfg \
+		-c "program $(shell pwd)/$(system_bin) 0x08000000" \
 		-c "reset run" -c shutdown
 
 clean_u-boot:

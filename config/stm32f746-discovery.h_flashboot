@@ -257,16 +257,16 @@
 #define CONFIG_STM32_USART_RX_IO_PORT	2	/* PORTC */
 #define CONFIG_STM32_USART_RX_IO_PIN	7	/* GPIO7 */
 
-#define CONFIG_BAUDRATE			9600
+#define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
 /*
  * Ethernet configuration
  */
-/*#define CONFIG_NET_MULTI
+#define CONFIG_NET_MULTI
 #define CONFIG_STM32_ETH
-#define CONFIG_STM32_ETH_RMII*/
-#undef CONFIG_NET_MULTI
+#define CONFIG_STM32_ETH_RMII
+//#undef CONFIG_NET_MULTI
 
 /*
  * Ethernet RX buffers are malloced from the internal SRAM (more precisely,
@@ -365,6 +365,7 @@
 #undef CONFIG_CMD_LOADS
 #undef CONFIG_CMD_MISC
 #undef CONFIG_CMD_NET
+#define CONFIG_CMD_NET
 #undef CONFIG_CMD_NFS
 #undef CONFIG_CMD_SOURCE
 #undef CONFIG_CMD_XIMG
@@ -389,7 +390,8 @@
 /* boot args and env */
 #define CONFIG_HOSTNAME			stm32f7-disco
 #define CONFIG_BOOTARGS			"stm32_platform=stm32f7-disco "	\
-					"console=tty0 panic=10 initrd=0xC0208000,2M rw"
+					"console=tty0 panic=5 initrd=0xC0208040,158240 rw"
+//					"console=ttyS5,115200 panic=5 initrd=0xC0208000,2M rw"
 //					"console=ttyS5,9600 panic=10 initrd=0xC0208000,2M rw"
 
 #define LOADADDR			"0xC0007FC0"
@@ -417,9 +419,14 @@
 	"image=stm32f7/system.uImage\0"		\
 	"stdin=serial\0"					\
 	"netboot=tftp ${image};run args addip;bootm 0xC0007FC0 0xC0207FC0\0"		\
-	"flashboot=run args addip;bootm 0x08020000\0"            \
+	"flashbootold=tftp stm32f7/kernel.uImage;setenv bootargs stm32_platform=stm32f7-disco console=ttyS5,115200 panic=2 initrd=0xC0208000,2M;bootm 0xc0007fc0 0x08080000\0"            \
+	"flashboot=run args addip;bootm 0x0803F000 0x08018000\0"            \
 	"b2=tftp 0xc0007fc0 stm32f7/uImage;tftp 0xc0207fc0 stm32f7/root-ext2.img.gz.uimage;run args addip;bootm 0xC0007FC0 0xC0207FC0\0"		\
+	"f=run flashboot\0"					\
 	REV_EXTRA_ENV
+
+//	"flashboot=run args addip;bootm 0x08012000 0x080D8F00\0"            \
+//	"flashboot=run args addip;bootm 0x08020000\0"            \
 
 /*
  * Linux kernel boot parameters configuration
@@ -428,3 +435,5 @@
 #define CONFIG_CMDLINE_TAG
 
 #endif /* __CONFIG_H */
+
+//#define CONFIG_HAS_DATAFLASH
