@@ -256,7 +256,7 @@
 #define CONFIG_STM32_USART_RX_IO_PORT	2	/* PORTC */
 #define CONFIG_STM32_USART_RX_IO_PIN	7	/* GPIO7 */
 
-#define CONFIG_BAUDRATE			9600
+#define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
 
 /*
@@ -386,7 +386,7 @@
 /* boot args and env */
 #define CONFIG_HOSTNAME			stm32f7-disco
 #define CONFIG_BOOTARGS			"stm32_platform=stm32f7-disco "	\
-					"console=ttyS5,9600 panic=10 initrd=0xC0208000,2M rw"
+					"console=ttyS5,115200 panic=10 initrd=0xC0208000,2M rw"
 
 #define LOADADDR			"0xC0007FC0"
 
