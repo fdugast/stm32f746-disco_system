@@ -11,6 +11,7 @@ linux_gz_bin = $(build_dir)/kernel.gz.uImage
 config_dir = config
 mkimage = $(src_dir)/$(u-boot_src_dir)/tools/mkimage
 rootfs_dir = rootfs
+#rootfs_files_dir = $(rootfs_dir)/files_original
 rootfs_files_dir = $(rootfs_dir)/files
 rootfs_img = rootfs.img
 rootfs_img_gz = $(rootfs_dir)/rootfs.img.gz
@@ -52,8 +53,8 @@ app: rootfs/app/app.c
 system_bin: $(linux_bin)
 	dd if=/dev/zero of=$(system_bin) bs=1024k count=1
 	dd if=build/u-boot.bin of=$(system_bin) conv=notrunc bs=1
-	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=96k
-	dd if=$(linux_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=252k
+	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=98k
+	dd if=$(linux_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=300k
 	
 system_uImage: $(linux_bin) $(rootfs_img_gz_bin)
 	@echo Building $(system_uImage)
@@ -80,10 +81,10 @@ $(linux_bin): build_linux
 
 build_linux: check_compiler_exists prepare_linux_sources
 	@echo Building Linux
-	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) Image
-	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) zImage
 	mkdir -p $(build_dir)
+	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) Image
 	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0008000 -e 0xc0008001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/Image $(linux_bin)
+	make -C $(src_dir)/$(linux_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(PARALLEL) zImage
 	$(mkimage) -A arm -O linux -T kernel -C none -a 0xc0508000 -e 0xc0508001 -n 'Linux-uImage' -d $(src_dir)/$(linux_src_dir)/arch/arm/boot/zImage $(linux_gz_bin)
 	cp $(linux_bin) $(tftp_dir)/
 

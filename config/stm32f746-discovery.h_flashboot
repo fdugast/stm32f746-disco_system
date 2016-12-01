@@ -175,7 +175,7 @@
  * TBD: Check if external Flash is available on the Discovery board.
  * If not, remove the below defines related to external Flash.
  */
-#if 1
+#if 0
 
 /*
  * No external Flash
@@ -263,6 +263,8 @@
 /*
  * Ethernet configuration
  */
+#if 1
+
 #define CONFIG_NET_MULTI
 #define CONFIG_STM32_ETH
 #define CONFIG_STM32_ETH_RMII
@@ -276,6 +278,8 @@
  * may be received without processing until overflow happens).
  */
 #define CONFIG_SYS_RX_ETH_BUFFER	4
+
+#endif
 
 /*
  * Console I/O buffer size
@@ -364,7 +368,7 @@
 #undef CONFIG_CMD_IMLS
 #undef CONFIG_CMD_LOADS
 #undef CONFIG_CMD_MISC
-#undef CONFIG_CMD_NET
+//#undef CONFIG_CMD_NET
 #define CONFIG_CMD_NET
 #undef CONFIG_CMD_NFS
 #undef CONFIG_CMD_SOURCE
@@ -390,7 +394,7 @@
 /* boot args and env */
 #define CONFIG_HOSTNAME			stm32f7-disco
 #define CONFIG_BOOTARGS			"stm32_platform=stm32f7-disco "	\
-					"console=tty0 panic=5 initrd=0xC0208040,158240 rw"
+					"console=tty0 panic=5 initrd=0xC0208040,173786 rw quiet"
 
 #define LOADADDR			"0xC0007FC0"
 
@@ -418,7 +422,8 @@
 	"stdin=serial\0"					\
 	"netboot=tftp ${image};run args addip;bootm 0xC0007FC0 0xC0207FC0\0"		\
 	"flashbootold=tftp stm32f7/kernel.uImage;setenv bootargs stm32_platform=stm32f7-disco console=ttyS5,115200 panic=2 initrd=0xC0208000,2M;bootm 0xc0007fc0 0x08080000\0"            \
-	"flashboot=run args addip;bootm 0x0803F000 0x08018000\0"            \
+	"flashboot=run args addip;bootm 0x0804B000 0x08018800\0"            \
+	"flashboot2=run args addip;bootm 0x0803F000 0x08018000\0"            \
 	"b2=tftp 0xc0007fc0 stm32f7/uImage;tftp 0xc0207fc0 stm32f7/root-ext2.img.gz.uimage;run args addip;bootm 0xC0007FC0 0xC0207FC0\0"		\
 	"f=run flashboot\0"					\
 	REV_EXTRA_ENV
