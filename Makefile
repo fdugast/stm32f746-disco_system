@@ -10,12 +10,6 @@ linux_bin = $(build_dir)/kernel.uImage
 linux_gz_bin = $(build_dir)/kernel.gz.uImage
 config_dir = config
 mkimage = $(src_dir)/$(u-boot_src_dir)/tools/mkimage
-rootfs_dir = rootfs
-#rootfs_files_dir = $(rootfs_dir)/files_original
-rootfs_files_dir = $(rootfs_dir)/files
-rootfs_img = rootfs.img
-rootfs_img_gz = $(rootfs_dir)/rootfs.img.gz
-rootfs_img_gz_bin = $(build_dir)/rootfs.img.gz.uImage
 ramdisk_dir = ramdisk
 ramdisk_gz = $(build_dir)/ramdisk.gz
 ramdisk_uImage = $(build_dir)/ramdisk.uImage
@@ -24,7 +18,6 @@ system_bin = $(build_dir)/system.bin
 tftp_dir = /srv/tftp/stm32f7
 busybox_version = 1.25.1
 busybox_src_url = http://busybox.net/downloads/busybox-$(busybox_version).tar.bz2
-#busybox_dir=$(rootfs_dir)/busybox-1.25.1
 busybox_src_dir = busybox-$(busybox_version)
 ARCH=arm
 CROSS_COMPILE=arm-uclinuxeabi-
@@ -73,19 +66,6 @@ $(ramdisk_uImage):
 	@echo Building $(ramdisk_uImage)
 	mkimage -A arm -O linux -T ramdisk -d $(ramdisk_gz) -C gzip -a 0xc0208000 -e 0xc0208001 $(ramdisk_uImage)
 
-$(rootfs_img_gz_bin):
-	@if [ ! -d $(rootfs_files_dir) ]; then \
-		echo $(rootfs_files_dir) is empty, try decompressing doc/initdir.tar there as root;\
-		exit 1;\
-	fi
-	mkdir -p $(build_dir)
-	@echo Building $(rootfs_img)
-	cd $(rootfs_files_dir) && find . | cpio -o --format=newc > ../$(rootfs_img)
-	@echo Building $(rootfs_img_gz)
-	gzip -c $(rootfs_dir)/$(rootfs_img) > $(rootfs_img_gz)
-	@echo Building $(rootfs_img_gz_bin)
-	mkimage -A arm -O linux -T ramdisk -d $(rootfs_img_gz) -C gzip -a 0xc0208000 -e 0xc0208001 $(rootfs_img_gz_bin)
-	
 $(linux_bin): build_linux
 	
 
