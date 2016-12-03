@@ -37,9 +37,11 @@ Run:
 ### RAM disk
 
 The RAM disk is built with the files under `ramdisk`. This is the place to add your app. The repository contains a precompiled version of Busybox with the configuration from `config/busybox_mini`. To build Busybox statically and copy the executable to `ramdisk/bin/busybox`, run:
+
 `$ make busybox_bin`
 
 To build the RAM disk itself and wrap it in a U-Boot image, use:
+
 `̀$ make build/ramdisk.uImage
 
 ### System image
