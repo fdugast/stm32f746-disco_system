@@ -42,7 +42,7 @@ The RAM disk is built with the files under `ramdisk`. This is the place to add y
 
 To build the RAM disk itself and wrap it in a U-Boot image, use:
 
-`̀$ make build/ramdisk.uImage`
+`$ make build/ramdisk.uImage`
 
 ### System image
 
