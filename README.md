@@ -34,13 +34,15 @@ Run:
 
 `$ make build_linux`
 
-### Root file system
+### RAM disk
 
-The file system is expected to be under `rootfs/files`. An example root file system with a precompiled Busybox can be found under `doc/initdir.tar`, thanks to https://github.com/angmouzakitis/linux-stm32f7.
+The RAM disk is built with the files under `ramdisk`. This is the place to add your app. The repository contains a precompiled version of Busybox with the configuration from `config/busybox_mini`. To build Busybox statically and copy the executable to `ramdisk/bin/busybox`, run:
 
-To build the image with CPIO, compress it and create a RAM disk, run:
+`$ make busybox_bin`
 
-`$ make build/rootfs.img.gz.uImage`
+To build the RAM disk itself and wrap it in a U-Boot image, use:
+
+`$ make build/ramdisk.uImage`
 
 ### System image
 
@@ -70,4 +72,4 @@ When the internal flash contains the whole system, the Busybox prompt should com
 
 When the internal flash contains only the bootloader, then a PC connected over Ethernet with the IP 172.17.0.1 must be serving the image `build/system.uImage` over a TFTP server.
 
-In both cases, the U-Boot console output is sent to the USART port 6 at 115200 baud.
+In both cases, the U-Boot console output is sent to the USART 6 at 115200 baud.
