@@ -16,6 +16,9 @@ rootfs_files_dir = $(rootfs_dir)/files
 rootfs_img = rootfs.img
 rootfs_img_gz = $(rootfs_dir)/rootfs.img.gz
 rootfs_img_gz_bin = $(build_dir)/rootfs.img.gz.uImage
+ramdisk_dir = ramdisk
+ramdisk_gz = $(build_dir)/ramdisk.gz
+ramdisk_uImage = $(build_dir)/ramdisk.uImage
 system_uImage = $(build_dir)/system.uImage
 system_bin = $(build_dir)/system.bin
 tftp_dir = /srv/tftp/stm32f7
@@ -32,7 +35,7 @@ all: system_bin copy_to_tftp
 	
 busybox_bin:
 	make -C $(src_dir)/$(busybox_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) SKIP_STRIP=y CFLAGS=$(CFLAGS_APP) $(PARALLEL)
-	cp $(src_dir)/$(busybox_src_dir)/busybox_unstripped $(rootfs_files_dir)/bin/busybox
+	cp $(src_dir)/$(busybox_src_dir)/busybox_unstripped $(ramdisk_dir)/bin/busybox
 
 prepare_busybox_sources: check_wget_exists
 	@echo Preparing sources for busybox
@@ -46,22 +49,29 @@ prepare_busybox_sources: check_wget_exists
 menuconfig_busybox:
 	make -C $(src_dir)/$(busybox_src_dir) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) menuconfig
 
-app: rootfs/app/app.c
-	$(CROSS_COMPILE)gcc $(CFLAGS_APP) rootfs/app/app.c -o rootfs/app/app
-	cp rootfs/app/app rootfs/files/bin/app
+app: app/app.c
+	$(CROSS_COMPILE)gcc $(CFLAGS_APP) app/app.c -o app/app
+	cp app/app $(ramdisk)/bin/app
 
 system_bin: $(linux_bin)
 	dd if=/dev/zero of=$(system_bin) bs=1024k count=1
 	dd if=build/u-boot.bin of=$(system_bin) conv=notrunc bs=1
-	dd if=$(rootfs_img_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=98k
+	dd if=$(ramdisk_uImage) of=$(system_bin) conv=notrunc bs=1 seek=98k
 	dd if=$(linux_gz_bin) of=$(system_bin) conv=notrunc bs=1 seek=300k
 	
-system_uImage: $(linux_bin) $(rootfs_img_gz_bin)
+system_uImage: $(linux_bin) $(ramdisk_uImage)
 	@echo Building $(system_uImage)
 	dd if=/dev/zero of=$(system_uImage) bs=6M count=1
 	dd if=$(linux_bin) of=$(system_uImage) conv=notrunc bs=1
-	dd if=$(rootfs_img_gz_bin) of=$(system_uImage) conv=notrunc bs=1 seek=2M
+	dd if=$(ramdisk_uImage) of=$(system_uImage) conv=notrunc bs=1 seek=2M
 	cp $(system_uImage) $(tftp_dir)/
+
+$(ramdisk_uImage):
+	mkdir -p $(build_dir)
+	@echo Building $(ramdisk_gz)
+	cd $(ramdisk_dir) && find . | cpio -o --format=newc | gzip -c > ../$(ramdisk_gz)
+	@echo Building $(ramdisk_uImage)
+	mkimage -A arm -O linux -T ramdisk -d $(ramdisk_gz) -C gzip -a 0xc0208000 -e 0xc0208001 $(ramdisk_uImage)
 
 $(rootfs_img_gz_bin):
 	@if [ ! -d $(rootfs_files_dir) ]; then \

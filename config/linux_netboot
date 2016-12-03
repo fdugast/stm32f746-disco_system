@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.33
-# Thu Dec  1 19:37:11 2016
+# Sat Dec  3 19:12:25 2016
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -252,7 +252,7 @@ CONFIG_STM32_MAC=y
 # CONFIG_STM32_I2C4 is not set
 CONFIG_STM32_SD=y
 CONFIG_STM32_SD_DMA=y
-CONFIG_STM32_USB_OTG_FS=y
+# CONFIG_STM32_USB_OTG_FS is not set
 CONFIG_STM32_USB_OTG_HS=y
 CONFIG_STM32_GPIO=y
 CONFIG_STM32_GPIO_INT=y

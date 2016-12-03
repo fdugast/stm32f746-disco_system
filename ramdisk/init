@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Configuration
+IP=172.17.0.2
+MOUNT_SD=/mnt/mmc
+COLOR_DONE='\033[0;31m'
+NC='\033[0m'
+#MESSAGE_DONE="${COLOR_DONE}done${NC}."
+MESSAGE_DONE="[ OK ]"
+SD_INIT=$MOUNT_SD/init
+
+echo "Kernel started."
+echo -n "Installing Busybox...                     "
+/bin/busybox --install -s /bin && echo $MESSAGE_DONE
+
+echo -n "Populating root filesystem...             "
+mknod /dev/null c 1 3
+mknod /dev/random c 1 8
+mknod /dev/urandom c 1 9
+mknod /dev/ttyS5 c 4 1
+mknod /dev/tty0 c 4 0
+mknod /dev/tty1 c 4 1
+mknod /dev/tty2 c 4 2
+mknod /dev/tty3 c 4 3
+mknod /dev/tty4 c 4 4
+mknod /dev/fb0 c 29 0
+mknod /dev/input0 c 13 64
+mknod /dev/mmcblk0 b 179 0
+mknod /dev/mmcblk0p1 b 179 1
+mkdir -p /mnt/mmc /lib/modules/2.6.33-arm1 /dev /proc /sys
+ln -s /bin /sbin
+echo $MESSAGE_DONE
+
+echo -n "Mounting /proc and /sys...                "
+mount -t proc /proc /proc && mount -t sysfs none /sys && echo $MESSAGE_DONE
+
+echo -n "Setting IP address to $IP...       "
+ifconfig eth0 $IP & && echo $MESSAGE_DONE
+
+echo -n "Waiting one second for SD card...         "
+sleep 1 && echo $MESSAGE_DONE
+
+[ -d /sys/class/mmc_host/mmc0/mmc0\:* ] \
+ && echo -n "Found SD card, mounting it to $MOUNT_SD... " && mount /dev/mmcblk0p1 $MOUNT_SD > /dev/null && echo $MESSAGE_DONE
+
+#[ -f $SD_INIT ] \
+# && echo "Found init on SD card, starting it... " && exec $SD_INIT
+
+echo "Starting Busybox from internal flash..."
+exec linuxrc

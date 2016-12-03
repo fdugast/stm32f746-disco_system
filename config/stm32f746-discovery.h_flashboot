@@ -393,8 +393,9 @@
 
 /* boot args and env */
 #define CONFIG_HOSTNAME			stm32f7-disco
+#define RAMDISK_SIZE			201285
 #define CONFIG_BOOTARGS			"stm32_platform=stm32f7-disco "	\
-					"console=tty0 panic=5 initrd=0xC0208040,173786 rw quiet"
+					"console=tty0 panic=5 initrd=0xC0208040,201283 rw quiet"
 
 #define LOADADDR			"0xC0007FC0"
 
